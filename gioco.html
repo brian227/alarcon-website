@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ping Pong Game</title>
+  <style>
+    body {
+      margin: 0;
+      background: rgb(161, 78, 78);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+
+    canvas {
+      background: #2c183a;
+      border: 2px solid white;
+    }
+  </style>
+</head>
+<body>
+
+<canvas id="gameCanvas" width="600" height="400"></canvas>
+
+<script>
+  const canvas = document.getElementById('gameCanvas');
+  const ctx = canvas.getContext('2d');
+
+  const paddleWidth = 10, paddleHeight = 100;
+  let playerY = canvas.height / 2 - paddleHeight / 2;
+  let aiY = canvas.height / 2 - paddleHeight / 2;
+  let ballX = canvas.width / 2, ballY = canvas.height / 2;
+  let ballSpeedX = 5, ballSpeedY = 3;
+
+  document.addEventListener('mousemove', (e) => {
+    const rect = canvas.getBoundingClientRect();
+    playerY = e.clientY - rect.top - paddleHeight / 2;
+  });
+
+  function drawRect(x, y, w, h, color) {
+    ctx.fillStyle = color;
+    ctx.fillRect(x, y, w, h);
+  }
+
+  function drawCircle(x, y, r, color) {
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.arc(x, y, r, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  function resetBall() {
+    ballX = canvas.width / 2;
+    ballY = canvas.height / 2;
+    ballSpeedX = -ballSpeedX;
+  }
+
+  function draw() {
+    drawRect(0, 0, canvas.width, canvas.height, '#222');
+
+    // Paddles
+    drawRect(0, playerY, paddleWidth, paddleHeight, 'white');
+    drawRect(canvas.width - paddleWidth, aiY, paddleWidth, paddleHeight, 'white');
+
+    // Ball
+    drawCircle(ballX, ballY, 8, 'white');
+  }
+
+  function update() {
+    // Ball movement
+    ballX += ballSpeedX;
+    ballY += ballSpeedY;
+
+    // Bounce top/bottom
+    if (ballY <= 0 || ballY >= canvas.height) ballSpeedY = -ballSpeedY;
+
+    // Player paddle collision
+    if (
+      ballX <= paddleWidth &&
+      ballY > playerY &&
+      ballY < playerY + paddleHeight
+    ) {
+      ballSpeedX = -ballSpeedX;
+    }
+
+    // AI paddle movement
+    const aiCenter = aiY + paddleHeight / 2;
+    if (aiCenter < ballY - 20) aiY += 4;
+    else if (aiCenter > ballY + 20) aiY -= 4;
+
+    // AI paddle collision
+    if (
+      ballX >= canvas.width - paddleWidth &&
+      ballY > aiY &&
+      ballY < aiY + paddleHeight
+    ) {
+      ballSpeedX = -ballSpeedX;
+    }
+
+    // Missed ball
+    if (ballX < 0 || ballX > canvas.width) resetBall();
+  }
+
+  function gameLoop() {
+    update();
+    draw();
+    requestAnimationFrame(gameLoop);
+  }
+
+  gameLoop();
+</script>
+
+</body>
+</html>
